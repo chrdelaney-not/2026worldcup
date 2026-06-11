@@ -50,7 +50,7 @@
   .topline{display:flex; align-items:stretch; gap:10px; flex-wrap:wrap; padding:26px 0 0}
   .topline .tl-actions{margin-left:auto; display:flex; align-items:center; gap:8px}
   .src-toggle{font:600 12px 'Inter',sans-serif; color:var(--faint); background:none; border:0; cursor:pointer; text-decoration:underline}
-  .statusline{display:flex; align-items:center; gap:9px; font-size:13px; color:var(--muted); margin:10px 0 0; min-height:18px}
+  .statusline{display:flex; align-items:center; justify-content:flex-end; text-align:right; gap:9px; font-size:13px; color:var(--muted); margin:10px 0 0; min-height:18px}
   .statusline b{color:var(--text)}
   .statusline .sdot{width:9px; height:9px; border-radius:50%; background:var(--faint); flex:none}
   .statusline.live .sdot{background:var(--pitch); box-shadow:0 0 0 4px rgba(43,212,126,.18)}
@@ -100,6 +100,10 @@
   .sec-head h2{font-family:'Barlow Condensed',sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.04em; font-size:24px; margin:0}
   .sec-head .rule{flex:1; height:1px; background:var(--line)}
   .sec-head .meta{font-size:12px; color:var(--faint); letter-spacing:.08em; text-transform:uppercase}
+  .sec-toggle{cursor:pointer; user-select:none; border-radius:8px}
+  .sec-toggle:hover h2{color:var(--pitch)}
+  .sec-toggle:focus-visible{outline:2px solid var(--pitch); outline-offset:3px}
+  .sec-toggle .caret{color:var(--faint); flex:none}
 
   /* group panel (custom 3-state) */
   .gpanel{margin:0 0 10px; border:1px solid var(--line); border-radius:var(--r); overflow:hidden; background:var(--card)}
@@ -194,7 +198,7 @@
   .third-extra{display:flex; flex-direction:column; align-items:center; margin-top:16px}
   .third-extra .bcol-h{font:600 11px 'Inter',sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin-bottom:6px}
   .third-extra .btie{width:210px}
-  .sec-sub{color:var(--muted); font-size:13px; margin:-6px 0 14px; max-width:90ch}
+  .sec-sub{color:var(--muted); font-size:13px; margin:-6px 0 14px; max-width:none}
   .btie{background:var(--ink2); border:1px solid var(--line); border-radius:10px; overflow:hidden}
   .btie .bno{font:600 9px 'Inter',sans-serif; letter-spacing:.08em; color:var(--faint); padding:4px 9px 0}
   .brow{display:flex; align-items:center; gap:8px; padding:6px 9px; font-size:13px}
@@ -247,16 +251,10 @@
       <div class="fact"><div class="n" id="f-played">0</div><div class="l">Played</div></div>
       <div class="fact"><div class="n">104</div><div class="l">Matches</div></div>
       <div class="tl-actions">
-        <button class="src-toggle" onclick="toggleSrc()">Data source</button>
         <button class="btn" onclick="syncData()">Refresh results</button>
       </div>
     </div>
     <div class="statusline busy" id="statusLine"><span class="sdot"></span><span class="stxt" id="syncTxt">Preparing to sync results...</span></div>
-    <div class="src-body" id="srcBody">
-      <p>Results come from the free, public-domain openfootball feed on GitHub, which a local web page is allowed to read. It is community-maintained and refreshed roughly once a day, so it tracks completed matches rather than minute-by-minute live scores. The FIFA scores page cannot be read by a file on your computer (it loads its data with JavaScript and blocks cross-site requests), but you can paste any JSON feed below, including your own proxy of FIFA.</p>
-      <input id="srcUrl" type="url" spellcheck="false" value="https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json">
-      <button class="btn primary" onclick="syncData()">Use this source &amp; refresh</button>
-    </div>
 
     <div class="controls">
       <div class="row">
@@ -277,9 +275,9 @@
       <div class="activefilter" id="activeFilter"></div>
     </div>
 
-    <div id="sched-out"></div>
+    <div id="sched-groups"></div>
 
-    <div class="sec-head"><h2>Full bracket</h2><div class="rule"></div><span class="meta">Round of 32 to Final</span></div>
+    <div class="sec-head"><h2>Knockout Stage Bracket</h2><div class="rule"></div><span class="meta">Round of 32 to Final</span></div>
     <div class="panel">
       <p class="note" style="margin-bottom:12px">Teams fill in automatically from synced results: group winners and runners-up once a group is complete, the eight best third-place finishers as the feed assigns them, and each knockout winner as matches finish. Faded entries are still to be decided.</p>
       <div class="bracket-wrap"><div class="bracket" id="schedBracket"></div></div>
@@ -288,6 +286,17 @@
         <span class="k"><span class="sw" style="background:var(--pitch)"></span> Winner</span>
         <span class="k"><span class="sw" style="background:var(--gold)"></span> Final</span>
         <span class="k">Faded = still to be decided</span>
+      </div>
+    </div>
+
+    <div id="sched-ko"></div>
+
+    <div class="footer">
+      <button class="src-toggle" onclick="toggleSrc()">Data source</button>
+      <div class="src-body" id="srcBody">
+        <p>Results come from the free, public-domain openfootball feed on GitHub, which a local web page is allowed to read. It is community-maintained and refreshed roughly once a day, so it tracks completed matches rather than minute-by-minute live scores. The FIFA scores page cannot be read by a file on your computer (it loads its data with JavaScript and blocks cross-site requests), but you can paste any JSON feed below, including your own proxy of FIFA.</p>
+        <input id="srcUrl" type="url" spellcheck="false" value="https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json">
+        <button class="btn primary" onclick="syncData()">Use this source &amp; refresh</button>
       </div>
     </div>
   </section>
@@ -515,7 +524,7 @@ const H2018={r16:[["France","Argentina",4,3,0,""],["Uruguay","Portugal",2,1,0,""
  sf:[["France","Belgium",1,0,0,""],["Croatia","England",2,1,0,"AET"]],f:["France","Croatia",4,2,0,""],champ:"France"};
 
 /* ===== STATE ===== */
-let RES={}, thirdAssign={}, selGroup="all", selTeam="all", selDate=null, openSet=new Set(), koInited=false;
+let RES={}, thirdAssign={}, selGroup="all", selTeam="all", selDate=null, openSet=new Set(), koInited=false, gsCollapsed=false;
 let groupState={}; GROUPS.forEach(g=>groupState[g]=0); // 0 closed, 1 standings, 2 standings+fixtures
 let calMonthIdx=0; // 0 = June 2026, 1 = July 2026
 
@@ -653,7 +662,6 @@ function render(){
   if(selDate) bits.push(prettyDate(selDate));
   document.getElementById('activeFilter').innerHTML = bits.length ? "Filtering by <b>"+bits.join("</b> · <b>")+"</b>" : "Showing all 104 matches.";
 
-  const out=[];
   const grpHtml=[];
   GROUPS.forEach(g=>{
     if(selGroup!=="all"&&selGroup!==g) return;
@@ -681,7 +689,18 @@ function render(){
       +'<span class="phase">'+step+'<span>'+hint+'</span></span>'
       +'</div>'+body+'</div>');
   });
-  if(grpHtml.length){ out.push('<div class="sec-head"><h2>Group Stage</h2><div class="rule"></div><span class="meta">Jun 11 – Jun 27</span></div>'); out.push('<p class="sec-sub">Standings are determined first by points, then goal difference, then goals for; official tiebreakers then continue with head-to-head and discipline.</p>'); out.push(grpHtml.join("")); }
+  const grpOut=[];
+  if(grpHtml.length){
+    const effCollapsed = gsCollapsed && selGroup==="all" && selTeam==="all" && !selDate;
+    const car='<svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform:rotate('+(effCollapsed?'0':'90')+'deg);transition:transform .2s"><path d="m9 6 6 6-6 6"/></svg>';
+    grpOut.push('<div class="sec-head sec-toggle" role="button" tabindex="0" aria-expanded="'+(!effCollapsed)+'" onclick="toggleGS()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleGS()}">'
+      +car+'<h2>Group Stage</h2><div class="rule"></div><span class="meta">Jun 11 – Jun 27</span></div>');
+    if(!effCollapsed){
+      grpOut.push('<p class="sec-sub">Standings are determined first by points, then goal difference, then goals for; official tiebreakers then continue with head-to-head and discipline.</p>');
+      grpOut.push(grpHtml.join(""));
+    }
+  }
+  document.getElementById('sched-groups').innerHTML=grpOut.join("");
 
   const koHtml=[];
   if(selTeam!=="all"){
@@ -707,11 +726,13 @@ function render(){
         +'<div class="grp-body" style="padding:8px 12px 12px;border-top:1px solid var(--line)">'+body+'</div></details>');
     });
   }
-  if(koHtml.length){ out.push('<div class="sec-head"><h2>Knockout Stage</h2><div class="rule"></div><span class="meta">Jun 28 – Jul 19</span></div>'); out.push(koHtml.join("")); }
-  document.getElementById('sched-out').innerHTML=out.join("");
+  const koOut=[];
+  if(koHtml.length){ koOut.push('<div class="sec-head"><h2>Knockout Stage</h2><div class="rule"></div><span class="meta">Jun 28 – Jul 19</span></div>'); koOut.push(koHtml.join("")); }
+  document.getElementById('sched-ko').innerHTML=koOut.join("");
   koInited=true;
   renderSchedBracket();
 }
+function toggleGS(){ gsCollapsed=!gsCollapsed; render(); }
 function cycleGroup(g){ groupState[g]=((groupState[g]||0)+1)%3; render(); }
 function setGroupState(g,s){ groupState[g]=s; render(); }
 function toggleKO(el){ if(el.open) openSet.add(el.id); else openSet.delete(el.id); }
