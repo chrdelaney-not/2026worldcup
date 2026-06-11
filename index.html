@@ -46,11 +46,17 @@
   .fact .n{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:24px; line-height:1}
   .fact .l{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin-top:3px}
 
+  /* schedule section sub-nav */
+  .subnav{display:flex; justify-content:center; gap:8px; flex-wrap:wrap; padding:16px 0 0}
+  .subnav button{font:600 13px 'Inter',sans-serif; color:var(--muted); background:var(--ink2); border:1px solid var(--line); padding:8px 16px; border-radius:999px; cursor:pointer; transition:.15s}
+  .subnav button:hover{color:var(--text); border-color:var(--pitch)}
+  #sched-groups,#kbHead,#sched-ko{scroll-margin-top:140px}
+
   /* top line: trackers + refresh */
-  .topline{display:flex; align-items:stretch; gap:10px; flex-wrap:wrap; padding:26px 0 0}
-  .topline .tl-actions{margin-left:auto; display:flex; align-items:center; gap:8px}
+  .topline{display:flex; align-items:stretch; gap:10px; flex-wrap:wrap; padding:16px 0 0}
+  .topline .tl-actions{margin-left:auto; display:flex; align-items:flex-end; gap:8px}
   .src-toggle{font:600 12px 'Inter',sans-serif; color:var(--faint); background:none; border:0; cursor:pointer; text-decoration:underline}
-  .statusline{display:flex; align-items:center; justify-content:flex-end; text-align:right; gap:9px; font-size:13px; color:var(--muted); margin:10px 0 0; min-height:18px}
+  .statusline{display:flex; align-items:center; justify-content:flex-end; text-align:right; gap:9px; font-size:13px; color:var(--muted); margin:16px 0; min-height:18px}
   .statusline b{color:var(--text)}
   .statusline .sdot{width:9px; height:9px; border-radius:50%; background:var(--faint); flex:none}
   .statusline.live .sdot{background:var(--pitch); box-shadow:0 0 0 4px rgba(43,212,126,.18)}
@@ -247,6 +253,11 @@
 
   <!-- ====== PAGE 1 ====== -->
   <section id="page-sched" class="page active">
+    <div class="subnav">
+      <button onclick="goTo('sched-groups')">Group Stage</button>
+      <button onclick="goTo('kbHead')">Knockout Stage Bracket</button>
+      <button onclick="goTo('sched-ko')">Knockout Stage</button>
+    </div>
     <div class="topline">
       <div class="fact"><div class="n" id="f-played">0</div><div class="l">Played</div></div>
       <div class="fact"><div class="n">104</div><div class="l">Matches</div></div>
@@ -277,7 +288,11 @@
 
     <div id="sched-groups"></div>
 
-    <div class="sec-head"><h2>Knockout Stage Bracket</h2><div class="rule"></div><span class="meta">Round of 32 to Final</span></div>
+    <div class="sec-head sec-toggle" id="kbHead" role="button" tabindex="0" aria-expanded="false" onclick="toggleKB()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleKB()}">
+      <svg class="caret" id="kbCaret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform:rotate(0deg);transition:transform .2s"><path d="m9 6 6 6-6 6"/></svg>
+      <h2>Knockout Stage Bracket</h2><div class="rule"></div><span class="meta">Round of 32 to Final</span>
+    </div>
+    <div id="kbBody" style="display:none">
     <div class="panel">
       <p class="note" style="margin-bottom:12px">Teams fill in automatically from synced results: group winners and runners-up once a group is complete, the eight best third-place finishers as the feed assigns them, and each knockout winner as matches finish. Faded entries are still to be decided.</p>
       <div class="bracket-wrap"><div class="bracket" id="schedBracket"></div></div>
@@ -287,6 +302,7 @@
         <span class="k"><span class="sw" style="background:var(--gold)"></span> Final</span>
         <span class="k">Faded = still to be decided</span>
       </div>
+    </div>
     </div>
 
     <div id="sched-ko"></div>
@@ -524,7 +540,7 @@ const H2018={r16:[["France","Argentina",4,3,0,""],["Uruguay","Portugal",2,1,0,""
  sf:[["France","Belgium",1,0,0,""],["Croatia","England",2,1,0,"AET"]],f:["France","Croatia",4,2,0,""],champ:"France"};
 
 /* ===== STATE ===== */
-let RES={}, thirdAssign={}, selGroup="all", selTeam="all", selDate=null, openSet=new Set(), koInited=false, gsCollapsed=false;
+let RES={}, thirdAssign={}, selGroup="all", selTeam="all", selDate=null, openSet=new Set(), koInited=false, gsCollapsed=true, kbCollapsed=true, ksCollapsed=true;
 let groupState={}; GROUPS.forEach(g=>groupState[g]=0); // 0 closed, 1 standings, 2 standings+fixtures
 let calMonthIdx=0; // 0 = June 2026, 1 = July 2026
 
@@ -727,12 +743,25 @@ function render(){
     });
   }
   const koOut=[];
-  if(koHtml.length){ koOut.push('<div class="sec-head"><h2>Knockout Stage</h2><div class="rule"></div><span class="meta">Jun 28 – Jul 19</span></div>'); koOut.push(koHtml.join("")); }
+  if(koHtml.length){
+    const effKS = ksCollapsed && selGroup==="all" && selTeam==="all" && !selDate;
+    const car='<svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform:rotate('+(effKS?'0':'90')+'deg);transition:transform .2s"><path d="m9 6 6 6-6 6"/></svg>';
+    koOut.push('<div class="sec-head sec-toggle" role="button" tabindex="0" aria-expanded="'+(!effKS)+'" onclick="toggleKS()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleKS()}">'
+      +car+'<h2>Knockout Stage</h2><div class="rule"></div><span class="meta">Jun 28 – Jul 19</span></div>');
+    if(!effKS) koOut.push(koHtml.join(""));
+  }
   document.getElementById('sched-ko').innerHTML=koOut.join("");
   koInited=true;
   renderSchedBracket();
 }
 function toggleGS(){ gsCollapsed=!gsCollapsed; render(); }
+function toggleKS(){ ksCollapsed=!ksCollapsed; render(); }
+function toggleKB(){ kbCollapsed=!kbCollapsed;
+  document.getElementById('kbBody').style.display=kbCollapsed?'none':'';
+  document.getElementById('kbCaret').style.transform='rotate('+(kbCollapsed?0:90)+'deg)';
+  document.getElementById('kbHead').setAttribute('aria-expanded',!kbCollapsed);
+}
+function goTo(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
 function cycleGroup(g){ groupState[g]=((groupState[g]||0)+1)%3; render(); }
 function setGroupState(g,s){ groupState[g]=s; render(); }
 function toggleKO(el){ if(el.open) openSet.add(el.id); else openSet.delete(el.id); }
