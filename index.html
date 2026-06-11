@@ -169,6 +169,7 @@
   .scorebox .pen{font:600 10px 'Inter',sans-serif; color:var(--faint); margin-left:2px}
   .badge{font:700 9px 'Inter',sans-serif; letter-spacing:.1em; padding:2px 6px; border-radius:5px; text-transform:uppercase; vertical-align:middle}
   .badge.ft{background:var(--line); color:var(--muted)}
+  .badge.live{background:var(--live); color:#fff; animation:pulse 1.4s infinite}
   .match .right{text-align:right}
   .match .venue{font-size:12px; color:var(--faint); line-height:1.3; max-width:170px}
   .match .venue .city{color:var(--muted); font-weight:600}
@@ -310,8 +311,8 @@
     <div class="footer">
       <button class="src-toggle" onclick="toggleSrc()">Data source</button>
       <div class="src-body" id="srcBody">
-        <p>Results come from the free, public-domain openfootball feed on GitHub, which a local web page is allowed to read. It is community-maintained and refreshed roughly once a day, so it tracks completed matches rather than minute-by-minute live scores. The FIFA scores page cannot be read by a file on your computer (it loads its data with JavaScript and blocks cross-site requests), but you can paste any JSON feed below, including your own proxy of FIFA.</p>
-        <input id="srcUrl" type="url" spellcheck="false" value="https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json">
+        <p>Results sync live from ESPN's public scoreboard for the World Cup, which a web page can read directly with no key. It updates during matches, so in-progress games show a live score and clock, and finished games update the standings right away. This is an unofficial ESPN endpoint, so if it ever stops responding you can paste the community openfootball feed (https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json), which updates about once a day. Either format is detected automatically.</p>
+        <input id="srcUrl" type="url" spellcheck="false" value="https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=20260611-20260719&limit=1000">
         <button class="btn primary" onclick="syncData()">Use this source &amp; refresh</button>
       </div>
     </div>
@@ -556,7 +557,7 @@ const MATCH_DAYS=(function(){ const s=new Set(); GS.forEach(m=>s.add(dateKey(m.d
 function standings(g){
   const teams=Object.keys(T).filter(n=>T[n].g===g), row={};
   teams.forEach(n=>row[n]={n,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
-  GS.filter(m=>m.g===g).forEach(m=>{ if(!hasScore(m.id)) return;
+  GS.filter(m=>m.g===g).forEach(m=>{ const r=RES[m.id]; if(!r||r.status!=="ft"||!hasScore(m.id)) return;
     const hs=num(RES[m.id].hs), as=num(RES[m.id].as), H=row[m.h], A=row[m.a];
     H.p++;A.p++; H.gf+=hs;H.ga+=as;A.gf+=as;A.ga+=hs;
     if(hs>as){H.w++;A.l++;H.pts+=3;} else if(hs<as){A.w++;H.l++;A.pts+=3;} else {H.d++;A.d++;H.pts++;A.pts++;}
@@ -584,6 +585,59 @@ function resolveSide(label,hostNo){
 
 /* ===== DATA SYNC ===== */
 function applyFeed(data){
+  if(data && Array.isArray(data.events)) return applyESPN(data);   // ESPN scoreboard
+  return applyOpenFootball(data);                                   // openfootball fallback
+}
+function applyESPN(data){
+  RES={}; thirdAssign={}; let n=0;
+  const koEvents=[];
+  function parse(ev){
+    const comp=ev.competitions&&ev.competitions[0]; if(!comp) return null;
+    const stt=comp.status&&comp.status.type; if(!stt) return null;
+    const status = stt.completed ? "ft" : (stt.state==="in" ? "live" : "pre");
+    if(status==="pre") return null;
+    const cs=comp.competitors||[], H=cs.find(c=>c.homeAway==="home"), A=cs.find(c=>c.homeAway==="away"); if(!H||!A) return null;
+    const hN=normName(H.team&&(H.team.displayName||H.team.name)), aN=normName(A.team&&(A.team.displayName||A.team.name));
+    const hs=num(H.score), as=num(A.score); if(hs==null||as==null) return null;
+    const rec={hs,as,status};
+    const ph=num(H.shootoutScore), pa=num(A.shootoutScore); if(ph!=null&&pa!=null&&(ph||pa)){ rec.php=ph; rec.pap=pa; }
+    const cl=comp.status&&comp.status.displayClock; if(status==="live"&&cl) rec.cl=cl;
+    return {hN,aN,rec};
+  }
+  function orient(toHome,p){ const k=(toHome===p.hN); const r={hs:k?p.rec.hs:p.rec.as, as:k?p.rec.as:p.rec.hs, status:p.rec.status};
+    if(p.rec.php!=null){ r.php=k?p.rec.php:p.rec.pap; r.pap=k?p.rec.pap:p.rec.php; } if(p.rec.cl) r.cl=p.rec.cl; return r; }
+  (data.events||[]).forEach(ev=>{
+    const p=parse(ev); if(!p||!p.hN||!p.aN) return;
+    const isGroup=/group/i.test((ev.season&&ev.season.slug)||"");
+    if(isGroup){
+      const mm=GS.find(x=>(x.h===p.hN&&x.a===p.aN)||(x.h===p.aN&&x.a===p.hN));
+      if(mm){ RES[mm.id]=orient(mm.h,p); n++; }
+    } else koEvents.push(p);
+  });
+  // knockout: match by resolved team pair across several passes; infer third-place occupants
+  for(let pass=0; pass<6; pass++){
+    koEvents.forEach(p=>{
+      if(p._used) return;
+      for(const no in KO_BY_NO){
+        const m=KO_BY_NO[no]; if(RES[m.id]) continue;
+        const hN=resolveSide(m.h,m.no), aN=resolveSide(m.a,m.no);
+        if(hN&&aN){
+          if((hN===p.hN&&aN===p.aN)||(hN===p.aN&&aN===p.hN)){ RES[m.id]=orient(hN,p); p._used=true; n++; break; }
+        } else {
+          const fixedLabel=/^3rd /.test(m.h)?m.a:(/^3rd /.test(m.a)?m.h:null);
+          if(fixedLabel){ const fixedName=resolveSide(fixedLabel,m.no);
+            if(fixedName&&(fixedName===p.hN||fixedName===p.aN)){
+              thirdAssign[m.no]=(fixedName===p.hN)?p.aN:p.hN;
+              RES[m.id]=orient(resolveSide(m.h,m.no),p); p._used=true; n++; break;
+            }
+          }
+        }
+      }
+    });
+  }
+  return n;
+}
+function applyOpenFootball(data){
   RES={}; thirdAssign={}; let n=0;
   (data.matches||[]).forEach(M=>{
     const sc=M.score;
@@ -608,9 +662,13 @@ function syncData(){
   const url=document.getElementById('srcUrl').value.trim();
   setSync("busy","Syncing results...");
   fetch(url,{cache:"no-store"}).then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
-    .then(data=>{ const n=applyFeed(data);
+    .then(data=>{ applyFeed(data);
+      const vals=Object.values(RES), liveN=vals.filter(r=>r.status==="live").length, ftN=vals.filter(r=>r.status==="ft").length;
       const now=new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-      setSync("live", (n>0?("<b>"+n+"</b> match result"+(n===1?"":"s")+" synced."):"Connected. <b>No results yet</b> (tournament starts June 11).")+" Updated "+now+".");
+      let msg;
+      if(vals.length===0) msg="Connected. <b>No results yet</b> (first kickoff June 11). Updated "+now+".";
+      else msg="<b>"+ftN+"</b> final"+(liveN?(" &middot; <b>"+liveN+"</b> live now"):"")+". Updated "+now+".";
+      setSync("live",msg);
       render();
     })
     .catch(e=>{ setSync("err","Could not reach the feed (offline, or the source blocked the request). The schedule still works; press <b>Refresh results</b> to retry."); });
@@ -629,7 +687,8 @@ function scoreCenter(m,isKO){
   const r=RES[m.id]; if(!hasScore(m.id)) return '<span class="vs">VS</span>';
   const hs=num(r.hs), as=num(r.as);
   let pen=""; if(isKO && hs===as && num(r.php)!=null && num(r.pap)!=null) pen='<span class="pen">('+r.php+'-'+r.pap+' p)</span>';
-  return '<span class="scorebox">'+hs+'<span class="sep">-</span>'+as+pen+'</span><span class="badge ft">FT</span>';
+  const badge = r.status==="live" ? '<span class="badge live">'+(r.cl?esc(r.cl):'LIVE')+'</span>' : '<span class="badge ft">FT</span>';
+  return '<span class="scorebox">'+hs+'<span class="sep">-</span>'+as+pen+'</span>'+badge;
 }
 function winnerName(m,isKO){
   if(!hasScore(m.id)) return null;
@@ -865,6 +924,7 @@ function showPage(p){ document.getElementById('page-sched').classList.toggle('ac
 
 /* ===== INIT ===== */
 buildControls(); render(); renderRankings(); renderBrackets(); syncData();
+setInterval(syncData, 60000); // auto-refresh live scores every 60s
 </script>
 </body>
 </html>
