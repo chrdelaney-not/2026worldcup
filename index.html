@@ -27,16 +27,16 @@
   .wrap{max-width:1160px; margin:0 auto; padding:0 18px 90px}
 
   .topbar{position:sticky; top:0; z-index:40; backdrop-filter:blur(10px); background:linear-gradient(180deg, rgba(11,18,32,.95), rgba(11,18,32,.78)); border-bottom:1px solid var(--line);}
-  .topbar .wrap{padding-top:12px; padding-bottom:12px; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+  .topbar .wrap{padding-top:11px; padding-bottom:11px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
   .brand{display:flex; align-items:baseline; gap:10px; margin-right:auto}
   .brand .mark{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:26px; letter-spacing:.02em; line-height:1}
   .brand .mark b{color:var(--pitch)}
   .brand .sub{font-size:12px; color:var(--faint); letter-spacing:.14em; text-transform:uppercase}
-  .nav{display:flex; gap:6px; background:var(--ink2); border:1px solid var(--line); border-radius:999px; padding:4px}
-  .nav button{font:600 14px 'Inter',sans-serif; color:var(--muted); background:none; border:0; padding:8px 16px; border-radius:999px; cursor:pointer; transition:.18s}
+  .nav{display:flex; gap:4px; background:var(--ink2); border:1px solid var(--line); border-radius:999px; padding:3px}
+  .nav button{font:600 12.5px 'Inter',sans-serif; color:var(--muted); background:none; border:0; padding:6px 11px; border-radius:999px; cursor:pointer; transition:.18s}
   .nav button:hover{color:var(--text)}
   .nav button[aria-selected="true"]{background:var(--pitch); color:#06251a}
-  .hdr-btn{font:600 13px 'Inter',sans-serif; color:var(--muted); background:var(--ink2); border:1px solid var(--line2); padding:9px 14px; border-radius:999px; cursor:pointer; transition:.15s}
+  .hdr-btn{font:600 12.5px 'Inter',sans-serif; color:var(--muted); background:var(--ink2); border:1px solid var(--line2); padding:7px 11px; border-radius:999px; cursor:pointer; transition:.15s}
   .hdr-btn:hover{color:var(--text); border-color:var(--pitch)}
 
   .hero{padding:34px 0 8px}
@@ -241,7 +241,7 @@
 <div class="topbar">
   <div class="wrap">
     <div class="brand"><span class="mark">WC<b>26</b> Tracker</span><span class="sub">USA · Canada · Mexico</span></div>
-    <button class="hdr-btn" onclick="syncData()">Refresh results</button>
+    <button class="hdr-btn" onclick="syncData()">Refresh Results</button>
     <div class="nav" role="tablist">
       <button id="tab-sched" role="tab" aria-selected="true" onclick="showPage('sched')">Schedule</button>
       <button id="tab-rank" role="tab" aria-selected="false" onclick="showPage('rank')">Rankings &amp; History</button>
@@ -258,8 +258,8 @@
       <span class="stat"><b>104</b> Matches</span>
       <span class="toprow-nav">
         <button onclick="goTo('sched-groups')">Group Stage</button>
-        <button onclick="goTo('kbHead')">Knockout Stage Bracket</button>
-        <button onclick="goTo('sched-ko')">Knockout Stage</button>
+        <button onclick="goTo('kbHead')">Bracket</button>
+        <button onclick="goTo('sched-ko')">Knockout Stages</button>
       </span>
     </div>
 
@@ -276,17 +276,15 @@
         <button class="btn" onclick="showAllTables()">Show all tables</button>
         <button class="btn" onclick="expandAll(true)">Expand all</button>
         <button class="btn" onclick="expandAll(false)">Collapse all</button>
-        <button class="btn" onclick="resetFilters()">Reset</button>
       </div>
       <div class="chips" id="groupChips"></div>
-      <div class="activefilter" id="activeFilter"></div>
     </div>
 
     <div id="sched-groups"></div>
 
     <div class="sec-head sec-toggle" id="kbHead" role="button" tabindex="0" aria-expanded="false" onclick="toggleKB()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleKB()}">
       <svg class="caret" id="kbCaret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform:rotate(0deg);transition:transform .2s"><path d="m9 6 6 6-6 6"/></svg>
-      <h2>Knockout Stage Bracket</h2><div class="rule"></div><span class="meta">Round of 32 to Final</span>
+      <h2>Bracket</h2><div class="rule"></div><span class="meta">Round of 32 to Final</span>
     </div>
     <div id="kbBody" style="display:none">
     <div class="panel">
@@ -751,10 +749,6 @@ function render(){
   const played=GS.filter(m=>hasScore(m.id)).length + KO_ORDER.reduce((a,s)=>a+KO[s].filter(m=>hasScore(m.id)).length,0);
   document.getElementById('f-played').textContent=played;
 
-  const bits=[]; if(selGroup!=="all") bits.push("Group "+selGroup); if(selTeam!=="all") bits.push(selTeam);
-  if(selDate) bits.push(prettyDate(selDate));
-  document.getElementById('activeFilter').innerHTML = bits.length ? "Filtering by <b>"+bits.join("</b> · <b>")+"</b>" : "Showing all 104 matches.";
-
   const grpHtml=[];
   GROUPS.forEach(g=>{
     if(selGroup!=="all"&&selGroup!==g) return;
@@ -824,7 +818,7 @@ function render(){
     const effKS = ksCollapsed && selGroup==="all" && selTeam==="all" && !selDate;
     const car='<svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform:rotate('+(effKS?'0':'90')+'deg);transition:transform .2s"><path d="m9 6 6 6-6 6"/></svg>';
     koOut.push('<div class="sec-head sec-toggle" role="button" tabindex="0" aria-expanded="'+(!effKS)+'" onclick="toggleKS()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleKS()}">'
-      +car+'<h2>Knockout Stage</h2><div class="rule"></div><span class="meta">Jun 28 – Jul 19</span></div>');
+      +car+'<h2>Knockout Stages</h2><div class="rule"></div><span class="meta">Jun 28 – Jul 19</span></div>');
     if(!effKS) koOut.push(koHtml.join(""));
   }
   document.getElementById('sched-ko').innerHTML=koOut.join("");
