@@ -173,6 +173,8 @@
   .match .right{text-align:right}
   .match .venue{font-size:12px; color:var(--faint); line-height:1.3; max-width:170px}
   .match .venue .city{color:var(--muted); font-weight:600}
+  .match .tv{font-size:11px; color:var(--muted); margin-top:5px; white-space:nowrap}
+  .match .tv .tv-l{font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); background:var(--ink); border:1px solid var(--line2); padding:1px 5px; border-radius:5px; margin-right:4px}
   .match.hl{box-shadow:0 0 0 2px var(--pitch) inset; background:#152e26}
   .gflag{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; padding:2px 7px; border-radius:6px; color:#06140d; letter-spacing:.03em}
 
@@ -541,7 +543,7 @@ const H2018={r16:[["France","Argentina",4,3,0,""],["Uruguay","Portugal",2,1,0,""
  sf:[["France","Belgium",1,0,0,""],["Croatia","England",2,1,0,"AET"]],f:["France","Croatia",4,2,0,""],champ:"France"};
 
 /* ===== STATE ===== */
-let RES={}, thirdAssign={}, selGroup="all", selTeam="all", selDate=null, openSet=new Set(), koInited=false, gsCollapsed=true, kbCollapsed=true, ksCollapsed=true;
+let RES={}, thirdAssign={}, BCAST={}, selGroup="all", selTeam="all", selDate=null, openSet=new Set(), koInited=false, gsCollapsed=true, kbCollapsed=true, ksCollapsed=true;
 let groupState={}; GROUPS.forEach(g=>groupState[g]=0); // 0 closed, 1 standings, 2 standings+fixtures
 let calMonthIdx=0; // 0 = June 2026, 1 = July 2026
 
@@ -589,20 +591,30 @@ function applyFeed(data){
   return applyOpenFootball(data);                                   // openfootball fallback
 }
 function applyESPN(data){
-  RES={}; thirdAssign={}; let n=0;
+  RES={}; thirdAssign={}; BCAST={}; let n=0;
   const koEvents=[];
+  function englishCh(comp){
+    const names=[];
+    (comp.geoBroadcasts||[]).forEach(b=>{ if(b.media&&b.media.shortName) names.push(b.media.shortName); });
+    (comp.broadcasts||[]).forEach(b=>{ (b.names||[]).forEach(x=>names.push(x)); });
+    return names.find(x=>/\bFOX\b|FS1|FS2|FOX Sports/i.test(x)) || null;
+  }
   function parse(ev){
     const comp=ev.competitions&&ev.competitions[0]; if(!comp) return null;
     const stt=comp.status&&comp.status.type; if(!stt) return null;
     const status = stt.completed ? "ft" : (stt.state==="in" ? "live" : "pre");
-    if(status==="pre") return null;
     const cs=comp.competitors||[], H=cs.find(c=>c.homeAway==="home"), A=cs.find(c=>c.homeAway==="away"); if(!H||!A) return null;
     const hN=normName(H.team&&(H.team.displayName||H.team.name)), aN=normName(A.team&&(A.team.displayName||A.team.name));
-    const hs=num(H.score), as=num(A.score); if(hs==null||as==null) return null;
-    const rec={hs,as,status};
-    const ph=num(H.shootoutScore), pa=num(A.shootoutScore); if(ph!=null&&pa!=null&&(ph||pa)){ rec.php=ph; rec.pap=pa; }
-    const cl=comp.status&&comp.status.displayClock; if(status==="live"&&cl) rec.cl=cl;
-    return {hN,aN,rec};
+    const bcast=englishCh(comp);
+    let rec=null;
+    if(status!=="pre"){
+      const hs=num(H.score), as=num(A.score);
+      if(hs!=null&&as!=null){ rec={hs,as,status};
+        const ph=num(H.shootoutScore), pa=num(A.shootoutScore); if(ph!=null&&pa!=null&&(ph||pa)){ rec.php=ph; rec.pap=pa; }
+        const cl=comp.status&&comp.status.displayClock; if(status==="live"&&cl) rec.cl=cl;
+      }
+    }
+    return {hN,aN,rec,bcast};
   }
   function orient(toHome,p){ const k=(toHome===p.hN); const r={hs:k?p.rec.hs:p.rec.as, as:k?p.rec.as:p.rec.hs, status:p.rec.status};
     if(p.rec.php!=null){ r.php=k?p.rec.php:p.rec.pap; r.pap=k?p.rec.pap:p.rec.php; } if(p.rec.cl) r.cl=p.rec.cl; return r; }
@@ -611,7 +623,7 @@ function applyESPN(data){
     const isGroup=/group/i.test((ev.season&&ev.season.slug)||"");
     if(isGroup){
       const mm=GS.find(x=>(x.h===p.hN&&x.a===p.aN)||(x.h===p.aN&&x.a===p.hN));
-      if(mm){ RES[mm.id]=orient(mm.h,p); n++; }
+      if(mm){ if(p.bcast) BCAST[mm.id]=p.bcast; if(p.rec){ RES[mm.id]=orient(mm.h,p); n++; } }
     } else koEvents.push(p);
   });
   // knockout: match by resolved team pair across several passes; infer third-place occupants
@@ -619,16 +631,17 @@ function applyESPN(data){
     koEvents.forEach(p=>{
       if(p._used) return;
       for(const no in KO_BY_NO){
-        const m=KO_BY_NO[no]; if(RES[m.id]) continue;
+        const m=KO_BY_NO[no];
         const hN=resolveSide(m.h,m.no), aN=resolveSide(m.a,m.no);
         if(hN&&aN){
-          if((hN===p.hN&&aN===p.aN)||(hN===p.aN&&aN===p.hN)){ RES[m.id]=orient(hN,p); p._used=true; n++; break; }
+          if((hN===p.hN&&aN===p.aN)||(hN===p.aN&&aN===p.hN)){
+            if(p.bcast) BCAST[m.id]=p.bcast; if(p.rec && !RES[m.id]){ RES[m.id]=orient(hN,p); n++; } p._used=true; break; }
         } else {
           const fixedLabel=/^3rd /.test(m.h)?m.a:(/^3rd /.test(m.a)?m.h:null);
           if(fixedLabel){ const fixedName=resolveSide(fixedLabel,m.no);
             if(fixedName&&(fixedName===p.hN||fixedName===p.aN)){
               thirdAssign[m.no]=(fixedName===p.hN)?p.aN:p.hN;
-              RES[m.id]=orient(resolveSide(m.h,m.no),p); p._used=true; n++; break;
+              if(p.bcast) BCAST[m.id]=p.bcast; if(p.rec && !RES[m.id]){ RES[m.id]=orient(resolveSide(m.h,m.no),p); n++; } p._used=true; break;
             }
           }
         }
@@ -638,7 +651,7 @@ function applyESPN(data){
   return n;
 }
 function applyOpenFootball(data){
-  RES={}; thirdAssign={}; let n=0;
+  RES={}; thirdAssign={}; BCAST={}; let n=0;
   (data.matches||[]).forEach(M=>{
     const sc=M.score;
     if(M.group){
@@ -705,7 +718,8 @@ function matchHTML(m,isKO){
     +'<div class="when"><div class="d">'+esc(m.d.slice(4))+'</div><div class="dow">'+m.d.slice(0,3)+'</div><div class="t">'+esc(m.t)+'</div></div>'
     +'<div class="teams">'+tag+sideHTML(m.h,isKO,m.no,win)+scoreCenter(m,isKO)+sideHTML(m.a,isKO,m.no,win)
       +(isKO?'<span class="slot" style="border-style:dashed">Match '+m.no+'</span>':'')+'</div>'
-    +'<div class="right"><div class="venue"><span class="city">'+esc(m.c)+'</span><br>'+esc(m.v)+'</div></div>'
+    +'<div class="right"><div class="venue"><span class="city">'+esc(m.c)+'</span><br>'+esc(m.v)+'</div>'
+      +(BCAST[m.id]?'<div class="tv"><span class="tv-l">TV (US)</span> '+esc(BCAST[m.id])+'</div>':'')+'</div>'
     +'</div>';
 }
 function matchPasses(m,isKO){
