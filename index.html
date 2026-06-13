@@ -85,14 +85,14 @@
   .calfoot{margin-top:10px; display:flex; justify-content:space-between; align-items:center}
   .calclear{background:none; border:0; color:var(--muted); font:600 12px 'Inter',sans-serif; cursor:pointer; text-decoration:underline}
 
-  .controls{margin:14px 0; border:1px solid var(--line); border-radius:var(--r); padding:12px}
-  .controls .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  .controls{width:fit-content; max-width:100%; margin:14px auto; border:1px solid var(--line); border-radius:var(--r); padding:12px 14px}
+  .controls .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:center}
   select{background:var(--ink); border:1px solid var(--line2); color:var(--text); border-radius:9px; padding:7px 11px; font:500 13px 'Inter',sans-serif; cursor:pointer; max-width:100%}
   select:focus{outline:2px solid var(--pitch); outline-offset:1px}
   .btn{background:var(--ink2); border:1px solid var(--line2); color:var(--muted); border-radius:9px; padding:7px 12px; font:600 13px 'Inter',sans-serif; cursor:pointer; transition:.15s}
   .btn:hover{color:var(--text); border-color:var(--pitch)}
   .btn.primary{background:var(--pitch); color:#06251a; border-color:transparent}
-  .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:12px}
+  .chips{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:12px}
   .chip{font:600 13px 'Barlow Condensed',sans-serif; letter-spacing:.04em; padding:6px 12px; border-radius:999px; border:1px solid var(--line2); background:var(--ink); color:var(--muted); cursor:pointer; transition:.15s}
   .chip .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle}
   .activefilter{font-size:12.5px; color:var(--muted); margin-top:10px}
