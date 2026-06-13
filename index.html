@@ -49,7 +49,7 @@
   .fact .l{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin-top:3px}
 
   /* combined trackers + section nav (compact, one row) */
-  .toprow{display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:14px 0 0}
+  .toprow{display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; padding:14px 0 0}
   .stat{display:inline-flex; align-items:center; gap:6px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 14px; font:600 11px 'Inter',sans-serif; color:var(--faint); letter-spacing:.06em; text-transform:uppercase}
   .stat b{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:16px; color:var(--text); letter-spacing:0}
   .toprow-nav{display:flex; gap:8px; flex-wrap:wrap; margin-left:auto}
@@ -92,8 +92,8 @@
   .btn{background:var(--ink2); border:1px solid var(--line2); color:var(--muted); border-radius:9px; padding:7px 12px; font:600 13px 'Inter',sans-serif; cursor:pointer; transition:.15s}
   .btn:hover{color:var(--text); border-color:var(--pitch)}
   .btn.primary{background:var(--pitch); color:#06251a; border-color:transparent}
-  .chips{display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:12px}
-  .chip{font:600 13px 'Barlow Condensed',sans-serif; letter-spacing:.04em; padding:6px 12px; border-radius:999px; border:1px solid var(--line2); background:var(--ink); color:var(--muted); cursor:pointer; transition:.15s}
+  .chips{display:flex; gap:5px; flex-wrap:wrap; justify-content:center; margin-top:12px}
+  .chip{font:600 12.5px 'Barlow Condensed',sans-serif; letter-spacing:.03em; padding:5px 9px; border-radius:999px; border:1px solid var(--line2); background:var(--ink); color:var(--muted); cursor:pointer; transition:.15s}
   .chip .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle}
   .activefilter{font-size:12.5px; color:var(--muted); margin-top:10px}
   .activefilter b{color:var(--pitch)}
@@ -189,11 +189,13 @@
   tr.team-row.hl td{background:#152e26}
   .gpill{display:inline-grid; place-items:center; width:24px; height:24px; border-radius:7px; color:#06140d; font:700 13px 'Barlow Condensed',sans-serif}
   .topgrid{display:grid; grid-template-columns:1fr 1fr; gap:18px}
-  .podium{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap}
-  .pod{flex:1 1 150px; background:var(--ink2); border:1px solid var(--line2); border-radius:12px; padding:14px}
-  .pod .r{font-family:'Barlow Condensed',sans-serif; font-weight:700; color:var(--gold); font-size:14px; letter-spacing:.08em}
-  .pod .nm{font-weight:700; font-size:18px; margin-top:4px; display:flex; align-items:center; gap:8px}
-  .pod .pt{color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; margin-top:2px}
+  .podium{display:flex; gap:8px; margin-bottom:14px; flex-wrap:nowrap}
+  .pod{flex:1 1 0; min-width:0; background:var(--ink2); border:1px solid var(--line2); border-radius:12px; padding:12px 10px}
+  .pod .r{font-family:'Barlow Condensed',sans-serif; font-weight:700; color:var(--gold); font-size:13px; letter-spacing:.08em}
+  .pod .nm{font-weight:700; font-size:16px; margin-top:4px; display:flex; align-items:center; gap:6px; min-width:0}
+  .pod .nm .fl{flex:none}
+  .pod .nm .nm-t{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .pod .pt{color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; margin-top:2px; white-space:nowrap}
 
   .bracket-wrap{overflow-x:auto; padding-bottom:6px; -webkit-overflow-scrolling:touch}
   .bracket{display:flex; gap:22px; padding:6px 2px; align-items:stretch}
@@ -241,7 +243,6 @@
 <div class="topbar">
   <div class="wrap">
     <div class="brand"><span class="mark">WC<b>26</b> Tracker</span><span class="sub">USA · Canada · Mexico</span></div>
-    <button class="hdr-btn" onclick="syncData()">Refresh Results</button>
     <div class="nav" role="tablist">
       <button id="tab-sched" role="tab" aria-selected="true" onclick="showPage('sched')">Schedule</button>
       <button id="tab-rank" role="tab" aria-selected="false" onclick="showPage('rank')">Rankings &amp; History</button>
@@ -309,9 +310,7 @@
   <!-- ====== PAGE 2 ====== -->
   <section id="page-rank" class="page">
     <div class="hero">
-      <h1>Form guide &amp;<br><span>recent history</span></h1>
-      <p>Where the 48 contenders sit in the official FIFA / Coca-Cola World Ranking before kickoff, and how the last two World Cups actually played out. Pick a team to trace it across the ranking and both brackets.</p>
-      <div class="row" style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; align-items:center">
+      <div class="row" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
         <select id="teamFilter2" aria-label="Highlight a team" onchange="onTeam2Select()"></select>
         <button class="btn" onclick="clearTeam2()">Clear highlight</button>
       </div>
@@ -521,10 +520,10 @@ const KO_ORDER=["Round of 32","Round of 16","Quarterfinals","Semifinals","Third-
 const KO_BY_NO={}; KO_ORDER.forEach(s=>KO[s].forEach(m=>{m.id="K"+m.no; KO_BY_NO[m.no]=m;}));
 
 /* ===== HISTORY ===== */
-const H2022={r16:[["Netherlands","USA",3,1,0,""],["Argentina","Australia",2,1,0,""],["France","Poland",3,1,0,""],["England","Senegal",3,0,0,""],["Japan","Croatia",1,1,1,"pens 1-3"],["Brazil","South Korea",4,1,0,""],["Morocco","Spain",0,0,0,"pens 3-0"],["Portugal","Switzerland",6,1,0,""]],
- qf:[["Croatia","Brazil",1,1,0,"pens 4-2"],["Netherlands","Argentina",2,2,1,"pens 3-4"],["Morocco","Portugal",1,0,0,""],["England","France",1,2,1,""]],
+const H2022={r16:[["Netherlands","USA",3,1,0,""],["Argentina","Australia",2,1,0,""],["Japan","Croatia",1,1,1,"pens 1-3"],["Brazil","South Korea",4,1,0,""],["England","Senegal",3,0,0,""],["France","Poland",3,1,0,""],["Morocco","Spain",0,0,0,"pens 3-0"],["Portugal","Switzerland",6,1,0,""]],
+ qf:[["Netherlands","Argentina",2,2,1,"pens 3-4"],["Croatia","Brazil",1,1,0,"pens 4-2"],["England","France",1,2,1,""],["Morocco","Portugal",1,0,0,""]],
  sf:[["Argentina","Croatia",3,0,0,""],["France","Morocco",2,0,0,""]],f:["Argentina","France",3,3,0,"pens 4-2"],champ:"Argentina"};
-const H2018={r16:[["France","Argentina",4,3,0,""],["Uruguay","Portugal",2,1,0,""],["Spain","Russia",1,1,1,"pens 3-4"],["Croatia","Denmark",1,1,0,"pens 3-2"],["Brazil","Mexico",2,0,0,""],["Belgium","Japan",3,2,0,""],["Sweden","Switzerland",1,0,0,""],["Colombia","England",1,1,1,"pens 3-4"]],
+const H2018={r16:[["France","Argentina",4,3,0,""],["Uruguay","Portugal",2,1,0,""],["Brazil","Mexico",2,0,0,""],["Belgium","Japan",3,2,0,""],["Spain","Russia",1,1,1,"pens 3-4"],["Croatia","Denmark",1,1,0,"pens 3-2"],["Sweden","Switzerland",1,0,0,""],["Colombia","England",1,1,1,"pens 3-4"]],
  qf:[["Uruguay","France",0,2,1,""],["Brazil","Belgium",1,2,1,""],["Russia","Croatia",2,2,1,"pens 3-4"],["Sweden","England",0,2,1,""]],
  sf:[["France","Belgium",1,0,0,""],["Croatia","England",2,1,0,"AET"]],f:["France","Croatia",4,2,0,""],champ:"France"};
 
@@ -727,17 +726,23 @@ function matchPasses(m,isKO){
   return true;
 }
 function standingsHTML(g){
-  const st=standings(g), played=GS.filter(m=>m.g===g).filter(m=>hasScore(m.id)).length;
+  const st=standings(g), t8=topThirds();
   const rows=st.map((r,i)=>{
-    const cls=i<2?"q":(i===2?"third":"");
-    const mark='<span class="qbar" style="background:'+(i<2?'var(--pitch)':(i===2?'var(--gold)':'var(--line2)'))+'"></span>';
+    const goldThird = (i===2 && t8.has(r.n));
+    const cls=i<2?"q":(goldThird?"third":"");
+    const mark='<span class="qbar" style="background:'+(i<2?'var(--pitch)':(goldThird?'var(--gold)':'var(--line2)'))+'"></span>';
     return '<tr class="'+cls+'"><td class="pos">'+(i+1)+'</td><td class="tm">'+mark+'<span class="fl">'+T[r.n].f+'</span>'+esc(r.n)+'</td>'
       +'<td>'+r.p+'</td><td>'+r.w+'</td><td>'+r.d+'</td><td>'+r.l+'</td><td>'+r.gf+'</td><td>'+r.ga+'</td><td>'+(r.gd>0?'+':'')+r.gd+'</td><td class="pts">'+r.pts+'</td></tr>';
   }).join("");
   return '<div class="stable-wrap"><table class="stable">'
     +'<colgroup><col class="c-pos"><col class="c-tm"><col span="8" class="c-st"></colgroup>'
-    +'<thead><tr><th></th><th class="tm">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
-    +'<div class="stable-note">'+(played?played+' of 6 played. ':'No matches played yet. ')+'Green = into the Round of 32, gold = third place (eight best thirds also advance).</div>';
+    +'<thead><tr><th></th><th class="tm">Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+// the eight best third-placed teams across the 12 groups (FIFA order: pts, GD, GF)
+function topThirds(){
+  const thirds=GROUPS.map(g=>standings(g)[2]).filter(Boolean);
+  thirds.sort((a,b)=> b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || a.n.localeCompare(b.n));
+  return new Set(thirds.slice(0,8).map(t=>t.n));
 }
 
 /* ===== RENDER ===== */
@@ -779,7 +784,7 @@ function render(){
     grpOut.push('<div class="sec-head sec-toggle" role="button" tabindex="0" aria-expanded="'+(!effCollapsed)+'" onclick="toggleGS()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleGS()}">'
       +car+'<h2>Groups</h2><div class="rule"></div><span class="meta">Jun 11 – Jun 27</span></div>');
     if(!effCollapsed){
-      grpOut.push('<p class="sec-sub">Standings are determined first by points, then goal difference, then goals for; official tiebreakers then continue with head-to-head and discipline.</p>');
+      grpOut.push('<p class="sec-sub">Standings are determined first by points, then goal difference, then goals for; official tiebreakers then continue with head-to-head and discipline. Green = into the Round of 32, gold = advancing from third place (eight best thirds also advance).</p>');
       grpOut.push(grpHtml.join(""));
     }
   }
@@ -927,7 +932,7 @@ function renderRankings(){
   const global=[]; Object.keys(T).forEach(n=>global.push({n,rk:T[n].rk,pt:T[n].pt,g:T[n].g}));
   Object.keys(EXTRA).forEach(n=>{ if(EXTRA[n].rk) global.push({n,rk:EXTRA[n].rk,pt:EXTRA[n].pt,g:null}); });
   global.sort((a,b)=>a.rk-b.rk); const top20=global.filter(x=>x.rk<=20);
-  document.getElementById('podium').innerHTML=top20.slice(0,3).map((x,i)=>'<div class="pod"><div class="r">'+["1st","2nd","3rd"][i]+'</div><div class="nm">'+flag(x.n)+esc(x.n)+'</div><div class="pt">'+x.pt.toFixed(2)+' pts</div></div>').join("");
+  document.getElementById('podium').innerHTML=top20.slice(0,3).map((x,i)=>'<div class="pod"><div class="r">'+["1st","2nd","3rd"][i]+'</div><div class="nm">'+flag(x.n)+'<span class="nm-t">'+esc(x.n)+'</span></div><div class="pt">'+x.pt.toFixed(2)+' pts</div></div>').join("");
   document.getElementById('top20').innerHTML=top20.map(x=>{ const hl=(x.n===selTeam2)?' class="team-row hl"':' class="team-row"';
     return '<tr'+hl+'><td class="rank">'+x.rk+'</td><td>'+flag(x.n)+' '+esc(x.n)+(x.g?'':' <span style="color:var(--faint);font-size:11px">(not in WC)</span>')+'</td><td class="pts">'+x.pt.toFixed(2)+'</td></tr>'; }).join("");
   const wc=Object.keys(T).map(n=>({n,rk:T[n].rk,pt:T[n].pt,g:T[n].g})).sort((a,b)=>a.rk-b.rk);
