@@ -264,7 +264,7 @@
         <div class="datepick">
           <button class="datebtn" id="dateBtn" aria-haspopup="true" onclick="toggleCal(event)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            <span id="dateLabel">Show all dates</span><span class="car">&#9662;</span>
+            <span id="dateLabel">Show all</span><span class="car">&#9662;</span>
           </button>
           <div class="calpop" id="calPop"></div>
         </div>
@@ -875,13 +875,13 @@ function renderCalPop(){
     +'<span class="mlabel">'+M.label+'</span>'
     +'<button class="calnav" onclick="calNav(event,1)"'+(calMonthIdx===MONTHS.length-1?' disabled':'')+'>&#8250;</button></div>'
     +'<div class="calgrid">'+WD.map(w=>'<div class="cawd">'+w+'</div>').join("")+cells+'</div>'
-    +'<div class="calfoot"><button class="calclear" onclick="clearDate()">Show all dates</button><button class="calclear" onclick="showToday()">Show today\'s matches</button></div>';
+    +'<div class="calfoot"><button class="calclear" onclick="clearDate()">Show all</button><button class="calclear" onclick="showToday()">Show today\'s matches</button></div>';
 }
 function toggleCal(e){ if(e) e.stopPropagation(); const p=document.getElementById('calPop'); const showing=p.classList.contains('show'); if(showing){ p.classList.remove('show'); return; } if(selDate){ const k=selDate.split("-"); calMonthIdx=(+k[1]===7)?1:0; } renderCalPop(); p.classList.add('show'); }
 function calNav(e,dir){ if(e) e.stopPropagation(); calMonthIdx=Math.max(0,Math.min(MONTHS.length-1,calMonthIdx+dir)); renderCalPop(); }
 function showToday(){ const d=new Date(), k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); calMonthIdx=(+k.split("-")[1]===7)?1:0; pickDate(k); }
 function pickDate(key){ selDate=key; document.getElementById('dateLabel').textContent=prettyDate(key); document.getElementById('dateBtn').classList.add('set'); document.getElementById('calPop').classList.remove('show'); render(); }
-function clearDate(){ selDate=null; document.getElementById('dateLabel').textContent="Show all dates"; document.getElementById('dateBtn').classList.remove('set'); document.getElementById('calPop').classList.remove('show'); render(); }
+function clearDate(){ selDate=null; document.getElementById('dateLabel').textContent="Show all"; document.getElementById('dateBtn').classList.remove('set'); document.getElementById('calPop').classList.remove('show'); render(); }
 document.addEventListener('click',function(e){ const dp=document.querySelector('.datepick'); if(dp && !dp.contains(e.target)) document.getElementById('calPop').classList.remove('show'); });
 
 /* ===== BRACKET ===== */
