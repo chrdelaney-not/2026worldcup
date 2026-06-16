@@ -871,14 +871,15 @@ function renderCalPop(){
     cells+='<button class="caday'+(has?' has':'')+(sel?' sel':'')+'"'+(has?' onclick="pickDate(\''+key+'\')"':' disabled')+'>'+d+(has?'<span class="pd"></span>':'')+'</button>';
   }
   document.getElementById('calPop').innerHTML=
-    '<div class="calhead"><button class="calnav" onclick="calNav(-1)"'+(calMonthIdx===0?' disabled':'')+'>&#8249;</button>'
+    '<div class="calhead"><button class="calnav" onclick="calNav(event,-1)"'+(calMonthIdx===0?' disabled':'')+'>&#8249;</button>'
     +'<span class="mlabel">'+M.label+'</span>'
-    +'<button class="calnav" onclick="calNav(1)"'+(calMonthIdx===MONTHS.length-1?' disabled':'')+'>&#8250;</button></div>'
+    +'<button class="calnav" onclick="calNav(event,1)"'+(calMonthIdx===MONTHS.length-1?' disabled':'')+'>&#8250;</button></div>'
     +'<div class="calgrid">'+WD.map(w=>'<div class="cawd">'+w+'</div>').join("")+cells+'</div>'
-    +'<div class="calfoot"><button class="calclear" onclick="clearDate()">Show all dates</button><span style="font-size:11px;color:var(--faint)">Dots mark match days</span></div>';
+    +'<div class="calfoot"><button class="calclear" onclick="clearDate()">Show all dates</button><button class="calclear" onclick="showToday()">Show today\'s matches</button></div>';
 }
 function toggleCal(e){ if(e) e.stopPropagation(); const p=document.getElementById('calPop'); const showing=p.classList.contains('show'); if(showing){ p.classList.remove('show'); return; } if(selDate){ const k=selDate.split("-"); calMonthIdx=(+k[1]===7)?1:0; } renderCalPop(); p.classList.add('show'); }
-function calNav(dir){ calMonthIdx=Math.max(0,Math.min(MONTHS.length-1,calMonthIdx+dir)); renderCalPop(); }
+function calNav(e,dir){ if(e) e.stopPropagation(); calMonthIdx=Math.max(0,Math.min(MONTHS.length-1,calMonthIdx+dir)); renderCalPop(); }
+function showToday(){ const d=new Date(), k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); calMonthIdx=(+k.split("-")[1]===7)?1:0; pickDate(k); }
 function pickDate(key){ selDate=key; document.getElementById('dateLabel').textContent=prettyDate(key); document.getElementById('dateBtn').classList.add('set'); document.getElementById('calPop').classList.remove('show'); render(); }
 function clearDate(){ selDate=null; document.getElementById('dateLabel').textContent="Show all dates"; document.getElementById('dateBtn').classList.remove('set'); document.getElementById('calPop').classList.remove('show'); render(); }
 document.addEventListener('click',function(e){ const dp=document.querySelector('.datepick'); if(dp && !dp.contains(e.target)) document.getElementById('calPop').classList.remove('show'); });
@@ -955,12 +956,6 @@ function clearTeam2(){ selTeam2="all"; document.getElementById('teamFilter2').va
 function showPage(p){ document.getElementById('page-sched').classList.toggle('active',p==='sched'); document.getElementById('page-rank').classList.toggle('active',p==='rank'); document.getElementById('tab-sched').setAttribute('aria-selected',p==='sched'); document.getElementById('tab-rank').setAttribute('aria-selected',p==='rank'); window.scrollTo({top:0}); }
 
 /* ===== INIT ===== */
-(function defaultToday(){
-  const d=new Date(), tk=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
-  if(tk>="2026-06-11"&&tk<="2026-07-19"){ selDate=tk; calMonthIdx=(+tk.split("-")[1]===7)?1:0;
-    const lbl=document.getElementById('dateLabel'); if(lbl) lbl.textContent=prettyDate(tk);
-    const b=document.getElementById('dateBtn'); if(b) b.classList.add('set'); }
-})();
 buildControls(); render(); renderRankings(); renderBrackets(); syncData();
 setInterval(syncData, 60000); // auto-refresh live scores every 60s
 </script>
