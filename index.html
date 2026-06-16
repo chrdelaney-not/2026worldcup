@@ -83,7 +83,7 @@
   .caday.has .pd{position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--pitch)}
   .caday.sel{background:var(--pitch); color:#06251a} .caday.sel .pd{background:#06251a}
   .calfoot{margin-top:10px; display:flex; justify-content:space-between; align-items:center}
-  .calclear{background:none; border:0; color:var(--muted); font:600 12px 'Inter',sans-serif; cursor:pointer; text-decoration:underline}
+  .calclear{background:none; border:0; color:var(--muted); font:600 13.5px 'Inter',sans-serif; cursor:pointer; text-decoration:underline}
 
   .controls{width:fit-content; max-width:100%; margin:14px auto; border:1px solid var(--line); border-radius:var(--r); padding:12px 14px}
   .controls .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:center}
@@ -264,7 +264,7 @@
         <div class="datepick">
           <button class="datebtn" id="dateBtn" aria-haspopup="true" onclick="toggleCal(event)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-            <span id="dateLabel">All dates</span><span class="car">&#9662;</span>
+            <span id="dateLabel">Show all dates</span><span class="car">&#9662;</span>
           </button>
           <div class="calpop" id="calPop"></div>
         </div>
@@ -875,12 +875,12 @@ function renderCalPop(){
     +'<span class="mlabel">'+M.label+'</span>'
     +'<button class="calnav" onclick="calNav(1)"'+(calMonthIdx===MONTHS.length-1?' disabled':'')+'>&#8250;</button></div>'
     +'<div class="calgrid">'+WD.map(w=>'<div class="cawd">'+w+'</div>').join("")+cells+'</div>'
-    +'<div class="calfoot"><button class="calclear" onclick="clearDate()">All dates</button><span style="font-size:11px;color:var(--faint)">Dots mark match days</span></div>';
+    +'<div class="calfoot"><button class="calclear" onclick="clearDate()">Show all dates</button><span style="font-size:11px;color:var(--faint)">Dots mark match days</span></div>';
 }
 function toggleCal(e){ if(e) e.stopPropagation(); const p=document.getElementById('calPop'); const showing=p.classList.contains('show'); if(showing){ p.classList.remove('show'); return; } if(selDate){ const k=selDate.split("-"); calMonthIdx=(+k[1]===7)?1:0; } renderCalPop(); p.classList.add('show'); }
 function calNav(dir){ calMonthIdx=Math.max(0,Math.min(MONTHS.length-1,calMonthIdx+dir)); renderCalPop(); }
 function pickDate(key){ selDate=key; document.getElementById('dateLabel').textContent=prettyDate(key); document.getElementById('dateBtn').classList.add('set'); document.getElementById('calPop').classList.remove('show'); render(); }
-function clearDate(){ selDate=null; document.getElementById('dateLabel').textContent="All dates"; document.getElementById('dateBtn').classList.remove('set'); document.getElementById('calPop').classList.remove('show'); render(); }
+function clearDate(){ selDate=null; document.getElementById('dateLabel').textContent="Show all dates"; document.getElementById('dateBtn').classList.remove('set'); document.getElementById('calPop').classList.remove('show'); render(); }
 document.addEventListener('click',function(e){ const dp=document.querySelector('.datepick'); if(dp && !dp.contains(e.target)) document.getElementById('calPop').classList.remove('show'); });
 
 /* ===== BRACKET ===== */
@@ -955,6 +955,12 @@ function clearTeam2(){ selTeam2="all"; document.getElementById('teamFilter2').va
 function showPage(p){ document.getElementById('page-sched').classList.toggle('active',p==='sched'); document.getElementById('page-rank').classList.toggle('active',p==='rank'); document.getElementById('tab-sched').setAttribute('aria-selected',p==='sched'); document.getElementById('tab-rank').setAttribute('aria-selected',p==='rank'); window.scrollTo({top:0}); }
 
 /* ===== INIT ===== */
+(function defaultToday(){
+  const d=new Date(), tk=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  if(tk>="2026-06-11"&&tk<="2026-07-19"){ selDate=tk; calMonthIdx=(+tk.split("-")[1]===7)?1:0;
+    const lbl=document.getElementById('dateLabel'); if(lbl) lbl.textContent=prettyDate(tk);
+    const b=document.getElementById('dateBtn'); if(b) b.classList.add('set'); }
+})();
 buildControls(); render(); renderRankings(); renderBrackets(); syncData();
 setInterval(syncData, 60000); // auto-refresh live scores every 60s
 </script>
