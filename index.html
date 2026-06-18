@@ -274,7 +274,10 @@
         <button class="btn" onclick="expandAll(false)">Collapse all</button>
       </div>
       <div class="chips" id="groupChips"></div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="resetFilters()">Reset all filters</button></div>
     </div>
+
+    <div id="sched-ko"></div>
 
     <div id="sched-groups"></div>
 
@@ -294,8 +297,6 @@
       </div>
     </div>
     </div>
-
-    <div id="sched-ko"></div>
 
     <div class="footer">
       <button class="src-toggle" onclick="toggleSrc()">Data source</button>
@@ -830,7 +831,7 @@ function render(){
     const effKS = ksCollapsed && selGroup==="all" && selTeam==="all" && !selDate;
     const car='<svg class="caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="transform:rotate('+(effKS?'0':'90')+'deg);transition:transform .2s"><path d="m9 6 6 6-6 6"/></svg>';
     koOut.push('<div class="sec-head sec-toggle" role="button" tabindex="0" aria-expanded="'+(!effKS)+'" onclick="toggleKS()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleKS()}">'
-      +car+'<h2>Stages</h2><div class="rule"></div><span class="meta">Jun 11 – Jul 19</span></div>');
+      +car+'<h2>Matches by Stage</h2><div class="rule"></div><span class="meta">Jun 11 – Jul 19</span></div>');
     if(!effKS) koOut.push(koHtml.join(""));
   }
   document.getElementById('sched-ko').innerHTML=koOut.join("");
