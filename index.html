@@ -12,7 +12,7 @@
     --ink:#0b1220; --ink2:#111c30; --card:#15233c; --card2:#1b2c49;
     --line:#23375a; --line2:#2e466f;
     --text:#eaf1fb; --muted:#94a8c8; --faint:#6c819f;
-    --pitch:#2bd47e; --gold:#f2c14e; --live:#ff5a5f;
+    --pitch:#e23b4e; --gold:#f2c14e; --live:#ff5a5f;
     --g-a:#e3a9a4; --g-b:#e6c2a0; --g-c:#dcd2a0; --g-d:#bcd9ab;
     --g-e:#a9d6c4; --g-f:#a6cdd6; --g-g:#aac6e2; --g-h:#aeb6e0;
     --g-i:#c3b2e2; --g-j:#d3b0df; --g-k:#e0aed0; --g-l:#e2abbd;
@@ -35,7 +35,7 @@
   .nav{display:flex; gap:4px; background:var(--ink2); border:1px solid var(--line); border-radius:999px; padding:3px}
   .nav button{font:600 12.5px 'Inter',sans-serif; color:var(--muted); background:none; border:0; padding:6px 11px; border-radius:999px; cursor:pointer; transition:.18s}
   .nav button:hover{color:var(--text)}
-  .nav button[aria-selected="true"]{background:var(--pitch); color:#06251a}
+  .nav button[aria-selected="true"]{background:var(--pitch); color:#fff}
   .hdr-btn{font:600 12.5px 'Inter',sans-serif; color:var(--muted); background:var(--ink2); border:1px solid var(--line2); padding:7px 11px; border-radius:999px; cursor:pointer; transition:.15s}
   .hdr-btn:hover{color:var(--text); border-color:var(--pitch)}
 
@@ -81,8 +81,8 @@
   .caday.has{background:var(--ink); color:var(--text); cursor:pointer}
   .caday.has:hover{background:var(--line2)}
   .caday.has .pd{position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--pitch)}
-  .caday.today{background:rgba(43,212,126,.15); color:var(--text); box-shadow:inset 0 0 0 1px rgba(43,212,126,.5)}
-  .caday.sel{background:var(--pitch); color:#06251a; box-shadow:none} .caday.sel .pd{background:#06251a}
+  .caday.today{background:rgba(226,59,78,.15); color:var(--text); box-shadow:inset 0 0 0 1px rgba(226,59,78,.5)}
+  .caday.sel{background:var(--pitch); color:#fff; box-shadow:none} .caday.sel .pd{background:#fff}
   .calfoot{margin-top:10px; display:flex; justify-content:space-between; align-items:center}
   .calclear{background:none; border:0; color:var(--muted); font:600 13.5px 'Inter',sans-serif; cursor:pointer; text-decoration:underline}
 
@@ -92,7 +92,7 @@
   select:focus{outline:2px solid var(--pitch); outline-offset:1px}
   .btn{background:var(--ink2); border:1px solid var(--line2); color:var(--muted); border-radius:9px; padding:7px 12px; font:600 13px 'Inter',sans-serif; cursor:pointer; transition:.15s}
   .btn:hover{color:var(--text); border-color:var(--pitch)}
-  .btn.primary{background:var(--pitch); color:#06251a; border-color:transparent}
+  .btn.primary{background:var(--pitch); color:#fff; border-color:transparent}
   .chips{display:flex; gap:5px; flex-wrap:wrap; justify-content:center; margin-top:12px}
   .chip{font:600 12.5px 'Barlow Condensed',sans-serif; letter-spacing:.03em; padding:5px 9px; border-radius:999px; border:1px solid var(--line2); background:var(--ink); color:var(--muted); cursor:pointer; transition:.15s}
   .chip .dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle}
@@ -113,7 +113,7 @@
   .ghead{cursor:pointer; padding:14px 16px; display:flex; align-items:center; gap:12px; user-select:none}
   .ghead:hover{background:var(--card2)}
   .ghead:focus-visible{outline:2px solid var(--pitch); outline-offset:-2px}
-  .ghead .tag{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:22px; width:38px; height:38px; display:grid; place-items:center; border-radius:10px; color:#06140d; flex:none}
+  .ghead .tag{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:22px; width:38px; height:38px; display:grid; place-items:center; border-radius:10px; color:#fff; flex:none}
   .ghead .gname{font-weight:600; font-size:15px}
   .ghead .teamchips{margin-left:auto; display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end}
   .tchip{font-size:12.5px; color:var(--muted); background:var(--ink); border:1px solid var(--line2); padding:3px 8px 3px 6px; border-radius:999px; white-space:nowrap}
@@ -172,8 +172,8 @@
   .match .venue .city{color:var(--muted); font-weight:600}
   .match .tv{font-size:11px; color:var(--muted); margin-top:5px; white-space:nowrap}
   .match .tv .tv-l{font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); background:var(--ink); border:1px solid var(--line2); padding:1px 5px; border-radius:5px; margin-right:4px}
-  .match.hl{box-shadow:0 0 0 2px var(--pitch) inset; background:#152e26}
-  .gflag{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; padding:2px 7px; border-radius:6px; color:#06140d; letter-spacing:.03em}
+  .match.hl{box-shadow:0 0 0 2px var(--pitch) inset; background:#2b1620}
+  .gflag{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; padding:2px 7px; border-radius:6px; color:#fff; letter-spacing:.03em}
 
   .stage-note{font-size:13px; color:var(--muted); padding:12px 14px; background:var(--ink2); border:1px dashed var(--line2); border-radius:11px; margin-top:9px}
   .half-head{font-family:'Barlow Condensed',sans-serif; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); font-size:13px; margin:14px 4px 2px}
@@ -187,8 +187,8 @@
   table.rk td.rank{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:18px; width:46px}
   table.rk td.pts{font-variant-numeric:tabular-nums; color:var(--muted); text-align:right; white-space:nowrap}
   table.rk td.grp{width:30px}
-  tr.team-row.hl td{background:#152e26}
-  .gpill{display:inline-grid; place-items:center; width:24px; height:24px; border-radius:7px; color:#06140d; font:700 13px 'Barlow Condensed',sans-serif}
+  tr.team-row.hl td{background:#2b1620}
+  .gpill{display:inline-grid; place-items:center; width:24px; height:24px; border-radius:7px; color:#fff; font:700 13px 'Barlow Condensed',sans-serif}
   .topgrid{display:grid; grid-template-columns:1fr 1fr; gap:18px}
   .podium{display:flex; gap:8px; margin-bottom:14px; flex-wrap:nowrap}
   .pod{flex:1 1 0; min-width:0; background:var(--ink2); border:1px solid var(--line2); border-radius:12px; padding:12px 10px}
@@ -786,7 +786,7 @@ function render(){
     grpOut.push('<div class="sec-head sec-toggle" role="button" tabindex="0" aria-expanded="'+(!effCollapsed)+'" onclick="toggleGS()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleGS()}">'
       +car+'<h2>Groups</h2><div class="rule"></div><span class="meta">Jun 11 – Jun 27</span></div>');
     if(!effCollapsed){
-      grpOut.push('<p class="sec-sub">Standings are determined first by points, then goal difference, then goals for; official tiebreakers then continue with head-to-head and discipline. Green = into the Round of 32, gold = advancing from third place (eight best thirds also advance).</p>');
+      grpOut.push('<p class="sec-sub">Standings are determined first by points, then goal difference, then goals for; official tiebreakers then continue with head-to-head and discipline. Red = into the Round of 32, gold = advancing from third place (eight best thirds also advance).</p>');
       grpOut.push(grpHtml.join(""));
     }
   }
@@ -913,8 +913,8 @@ function renderSchedBracket(){
 /* ===== CONTROLS ===== */
 function styleChips(){
   document.querySelectorAll('#groupChips .chip[data-g]').forEach(c=>{ const g=c.dataset.g, on=(g===selGroup);
-    if(g==="all"){ c.style.background=on?"var(--pitch)":"var(--ink)"; c.style.color=on?"#06140d":"var(--muted)"; c.style.borderColor=on?"transparent":"var(--line2)"; return; }
-    c.style.background=on?gcolor(g):"var(--ink)"; c.style.color=on?"#06140d":"var(--muted)"; c.style.borderColor=on?gcolor(g):"var(--line2)";
+    if(g==="all"){ c.style.background=on?"var(--pitch)":"var(--ink)"; c.style.color=on?"#fff":"var(--muted)"; c.style.borderColor=on?"transparent":"var(--line2)"; return; }
+    c.style.background=on?gcolor(g):"var(--ink)"; c.style.color=on?"#fff":"var(--muted)"; c.style.borderColor=on?gcolor(g):"var(--line2)";
   });
 }
 function setGroup(g){ selGroup=(selGroup===g)?"all":g; if(selGroup!=="all"){ selTeam="all"; document.getElementById('teamFilter').value="all"; } styleChips(); render(); }
