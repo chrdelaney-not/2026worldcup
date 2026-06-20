@@ -81,7 +81,8 @@
   .caday.has{background:var(--ink); color:var(--text); cursor:pointer}
   .caday.has:hover{background:var(--line2)}
   .caday.has .pd{position:absolute; bottom:4px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--pitch)}
-  .caday.sel{background:var(--pitch); color:#06251a} .caday.sel .pd{background:#06251a}
+  .caday.today{background:rgba(43,212,126,.15); color:var(--text); box-shadow:inset 0 0 0 1px rgba(43,212,126,.5)}
+  .caday.sel{background:var(--pitch); color:#06251a; box-shadow:none} .caday.sel .pd{background:#06251a}
   .calfoot{margin-top:10px; display:flex; justify-content:space-between; align-items:center}
   .calclear{background:none; border:0; color:var(--muted); font:600 13.5px 'Inter',sans-serif; cursor:pointer; text-decoration:underline}
 
@@ -865,11 +866,12 @@ const WD=["Su","Mo","Tu","We","Th","Fr","Sa"], MONTHS=[{y:2026,m:5,label:"June 2
 function prettyDate(key){ const p=key.split("-"); const dt=new Date(+p[0],+p[1]-1,+p[2]); return dt.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'}); }
 function renderCalPop(){
   const M=MONTHS[calMonthIdx], first=new Date(M.y,M.m,1).getDay(), days=new Date(M.y,M.m+1,0).getDate();
+  const tn=new Date(), today=tn.getFullYear()+"-"+String(tn.getMonth()+1).padStart(2,"0")+"-"+String(tn.getDate()).padStart(2,"0");
   let cells=""; for(let i=0;i<first;i++) cells+='<button class="caday" disabled></button>';
   for(let d=1; d<=days; d++){
     const key=M.y+"-"+String(M.m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
-    const has=MATCH_DAYS.has(key), sel=(selDate===key);
-    cells+='<button class="caday'+(has?' has':'')+(sel?' sel':'')+'"'+(has?' onclick="pickDate(\''+key+'\')"':' disabled')+'>'+d+(has?'<span class="pd"></span>':'')+'</button>';
+    const has=MATCH_DAYS.has(key), sel=(selDate===key), isToday=(key===today);
+    cells+='<button class="caday'+(has?' has':'')+(isToday?' today':'')+(sel?' sel':'')+'"'+(has?' onclick="pickDate(\''+key+'\')"':' disabled')+'>'+d+(has?'<span class="pd"></span>':'')+'</button>';
   }
   document.getElementById('calPop').innerHTML=
     '<div class="calhead"><button class="calnav" onclick="calNav(event,-1)"'+(calMonthIdx===0?' disabled':'')+'>&#8249;</button>'
