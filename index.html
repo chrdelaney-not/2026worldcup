@@ -146,6 +146,7 @@
   .stable td.pos{color:var(--faint); font-weight:700}
   .stable tr.q td.pos{color:var(--pitch)} .stable tr.q td.tm{color:var(--text)}
   .stable tr.third td.pos{color:var(--gold)}
+  .stable .qtag{display:inline-block; margin-left:6px; font:700 9px 'Inter',sans-serif; letter-spacing:.06em; color:#cdd9ff; background:rgba(79,111,224,.2); border:1px solid rgba(79,111,224,.55); padding:1px 5px; border-radius:5px; vertical-align:middle; white-space:nowrap}
   .stable td.pts{font-weight:700}
   .stable .qbar{display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:5px; vertical-align:middle}
   .stable-note{font-size:11px; color:var(--faint); margin:-4px 0 10px}
@@ -555,6 +556,39 @@ function standings(g){
   return teams.map(n=>({...row[n],gd:row[n].gf-row[n].ga})).sort((a,b)=> b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||a.n.localeCompare(b.n));
 }
 function groupComplete(g){ return GS.filter(m=>m.g===g).every(m=>{const r=RES[m.id]; return r&&r.status==="ft"&&hasScore(m.id);}); }
+// Exact clinch by enumerating remaining group results, applying FIFA tiebreakers head-to-head FIRST.
+// A team that has beaten every rival able to match its points is ranked above them, so its seed is locked.
+let clinchCache={};
+function groupClinch(g){
+  if(clinchCache[g]) return clinchCache[g];
+  const teams=Object.keys(T).filter(n=>T[n].g===g), ms=GS.filter(m=>m.g===g);
+  const isFt=m=>{const r=RES[m.id]; return r&&r.status==="ft"&&hasScore(m.id);};
+  const played=ms.filter(isFt), rem=ms.filter(m=>!isFt(m)), R=rem.length, total=Math.pow(3,R);
+  const ptsOf=o=> o===0?[3,0]:o===1?[0,3]:[1,1];                 // 0 home win, 1 away win, 2 draw
+  const playedOut=m=>{ const hs=num(RES[m.id].hs),as=num(RES[m.id].as); return hs>as?0:as>hs?1:2; };
+  const can1={},can2={},top2={}; teams.forEach(t=>{can1[t]=true;can2[t]=true;top2[t]=true;});
+  for(let c=0;c<total;c++){
+    const out={}; played.forEach(m=>out[m.id]=playedOut(m)); let cc=c;
+    for(let i=0;i<R;i++){ const o=cc%3; cc=(cc-o)/3; out[rem[i].id]=o; }
+    const pts={}; teams.forEach(t=>pts[t]=0);
+    ms.forEach(m=>{ const p=ptsOf(out[m.id]); pts[m.h]+=p[0]; pts[m.a]+=p[1]; });
+    teams.forEach(x=>{
+      const strictlyAbove=teams.filter(z=>z!==x&&pts[z]>pts[x]).length;
+      const tied=teams.filter(z=>z!==x&&pts[z]===pts[x]);
+      const S=[x,...tied], h2h={}; S.forEach(t=>h2h[t]=0);
+      ms.forEach(m=>{ if(S.indexOf(m.h)>=0&&S.indexOf(m.a)>=0){ const p=ptsOf(out[m.id]); h2h[m.h]+=p[0]; h2h[m.a]+=p[1]; } });
+      let certAbove=0, ambiguous=0;                              // within the equal-points set, rank by head-to-head points
+      tied.forEach(y=>{ if(h2h[y]>h2h[x]) certAbove++; else if(h2h[y]===h2h[x]) ambiguous++; });
+      const best=strictlyAbove+certAbove+1, worst=best+ambiguous; // ambiguous = decided later by goals
+      if(worst!==1) can1[x]=false;                               // guaranteed 1st in every outcome
+      if(!(best>=2&&worst<=2)) can2[x]=false;                    // guaranteed exactly 2nd
+      if(worst>2) top2[x]=false;                                 // guaranteed a top-2 (Round of 32) place
+    });
+  }
+  let first=null,second=null; const qualified=new Set();
+  teams.forEach(t=>{ if(can1[t])first=t; if(can2[t])second=t; if(top2[t])qualified.add(t); });
+  const res={first,second,qualified}; clinchCache[g]=res; return res;
+}
 function koWinner(no){
   const m=KO_BY_NO[no], r=RES[m.id];
   if(!r||r.status!=="ft"||!hasScore(m.id)) return null;
@@ -566,7 +600,10 @@ function koWinner(no){
 }
 function resolveSide(label,hostNo){
   let m=label.match(/^(Winner|Runner-up) ([A-L])$/);
-  if(m){ if(!groupComplete(m[2])) return null; const st=standings(m[2]); return m[1]==="Winner"?st[0].n:st[1].n; }
+  if(m){ const g=m[2];
+    if(groupComplete(g)){ const st=standings(g); return m[1]==="Winner"?st[0].n:st[1].n; }
+    const c=groupClinch(g); return m[1]==="Winner"?c.first:c.second;   // fill the moment a seed is locked
+  }
   m=label.match(/^Winner (\d+)$/); if(m){ const w=koWinner(+m[1]); return w?w.win:null; }
   m=label.match(/^Loser (\d+)$/); if(m){ const w=koWinner(+m[1]); return w?w.lose:null; }
   if(/^3rd /.test(label)) return thirdAssign[hostNo]||null;
@@ -598,7 +635,7 @@ function mergeBcast(data){
   });
 }
 function applyESPN(data){
-  RES={}; thirdAssign={}; let n=0;   // BCAST persists across syncs so a channel stays once known
+  RES={}; clinchCache={}; let n=0;   // thirdAssign + BCAST persist across syncs so known advancements/channels stay once learned
   const koEvents=[];
   function parse(ev){
     const comp=ev.competitions&&ev.competitions[0]; if(!comp) return null;
@@ -652,7 +689,7 @@ function applyESPN(data){
   return n;
 }
 function applyOpenFootball(data){
-  RES={}; thirdAssign={}; BCAST={}; let n=0;
+  RES={}; thirdAssign={}; BCAST={}; clinchCache={}; let n=0;
   (data.matches||[]).forEach(M=>{
     const sc=M.score;
     if(M.group){
@@ -728,12 +765,15 @@ function matchPasses(m,isKO){
   return true;
 }
 function standingsHTML(g){
-  const st=standings(g), t8=topThirds();
+  const st=standings(g), t8=topThirds(), done=groupComplete(g), cl=done?null:groupClinch(g);
   const rows=st.map((r,i)=>{
     const goldThird = (i===2 && t8.has(r.n));
     const cls=i<2?"q":(goldThird?"third":"");
     const mark='<span class="qbar" style="background:'+(i<2?'var(--pitch)':(goldThird?'var(--gold)':'var(--line2)'))+'"></span>';
-    return '<tr class="'+cls+'"><td class="pos">'+(i+1)+'</td><td class="tm">'+mark+'<span class="fl">'+T[r.n].f+'</span>'+esc(r.n)+'</td>'
+    const secured = done ? (i<2) : cl.qualified.has(r.n);
+    let tag=""; if(secured){ const seed = done?(i===0?"1st":"2nd") : (cl.first===r.n?"1st":cl.second===r.n?"2nd":null);
+      tag=' <span class="qtag" title="Clinched a Round of 32 place">R32'+(seed?' · '+seed:'')+'</span>'; }
+    return '<tr class="'+cls+'"><td class="pos">'+(i+1)+'</td><td class="tm">'+mark+'<span class="fl">'+T[r.n].f+'</span>'+esc(r.n)+tag+'</td>'
       +'<td>'+r.p+'</td><td>'+r.w+'</td><td>'+r.d+'</td><td>'+r.l+'</td><td>'+r.gf+'</td><td>'+r.ga+'</td><td>'+(r.gd>0?'+':'')+r.gd+'</td><td class="pts">'+r.pts+'</td></tr>';
   }).join("");
   return '<div class="stable-wrap"><table class="stable">'
@@ -749,6 +789,7 @@ function topThirds(){
 
 /* ===== RENDER ===== */
 function render(){
+  clinchCache={};
   const played=GS.filter(m=>hasScore(m.id)).length + KO_ORDER.reduce((a,s)=>a+KO[s].filter(m=>hasScore(m.id)).length,0);
   document.getElementById('f-played').textContent=played;
 
@@ -786,7 +827,7 @@ function render(){
     grpOut.push('<div class="sec-head sec-toggle" role="button" tabindex="0" aria-expanded="'+(!effCollapsed)+'" onclick="toggleGS()" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleGS()}">'
       +car+'<h2>Groups</h2><div class="rule"></div><span class="meta">Jun 11 – Jun 27</span></div>');
     if(!effCollapsed){
-      grpOut.push('<p class="sec-sub">Standings are determined first by points, then goal difference, then goals for; official tiebreakers then continue with head-to-head and discipline. Red = into the Round of 32, gold = advancing from third place (eight best thirds also advance).</p>');
+      grpOut.push('<p class="sec-sub">Teams are ranked by points, then by head-to-head record among the teams level on points (head-to-head points, then goal difference, then goals scored), and only after that by overall goal difference, overall goals scored, team conduct, and finally FIFA ranking. Red = into the Round of 32, gold = advancing from third place (eight best thirds also advance). An R32 tag marks a team that has already clinched a place.</p>');
       grpOut.push(grpHtml.join(""));
     }
   }
