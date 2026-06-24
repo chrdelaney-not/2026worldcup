@@ -115,6 +115,7 @@
   .ghead:focus-visible{outline:2px solid var(--pitch); outline-offset:-2px}
   .ghead .tag{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:22px; width:38px; height:38px; display:grid; place-items:center; border-radius:10px; color:#fff; flex:none}
   .ghead .gname{font-weight:600; font-size:15px}
+  .ghead .glive{font:700 9px 'Inter',sans-serif; letter-spacing:.08em; color:#fff; background:var(--live); padding:2px 6px; border-radius:5px; margin-left:8px; animation:pulse 1.4s infinite}
   .ghead .teamchips{margin-left:auto; display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end}
   .tchip{font-size:12.5px; color:var(--muted); background:var(--ink); border:1px solid var(--line2); padding:3px 8px 3px 6px; border-radius:999px; white-space:nowrap}
   .tchip .fl{margin-right:3px}
@@ -548,7 +549,7 @@ const MATCH_DAYS=(function(){ const s=new Set(); GS.forEach(m=>s.add(dateKey(m.d
 function standings(g){
   const teams=Object.keys(T).filter(n=>T[n].g===g), row={};
   teams.forEach(n=>row[n]={n,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
-  GS.filter(m=>m.g===g).forEach(m=>{ const r=RES[m.id]; if(!r||r.status!=="ft"||!hasScore(m.id)) return;
+  GS.filter(m=>m.g===g).forEach(m=>{ const r=RES[m.id]; if(!r||(r.status!=="ft"&&r.status!=="live")||!hasScore(m.id)) return;
     const hs=num(RES[m.id].hs), as=num(RES[m.id].as), H=row[m.h], A=row[m.a];
     H.p++;A.p++; H.gf+=hs;H.ga+=as;A.gf+=as;A.ga+=hs;
     if(hs>as){H.w++;A.l++;H.pts+=3;} else if(hs<as){A.w++;H.l++;A.pts+=3;} else {H.d++;A.d++;H.pts++;A.pts++;}
@@ -816,6 +817,7 @@ function render(){
       +'<div class="ghead" role="button" tabindex="0" aria-expanded="'+(stt>0)+'" onclick="cycleGroup(\''+g+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();cycleGroup(\''+g+'\')}">'
       +'<span class="tag" style="background:'+gcolor(g)+'">'+g+'</span>'
       +'<span class="gname">Group '+g+'</span>'
+      +(GS.some(m=>m.g===g&&RES[m.id]&&RES[m.id].status==="live")?'<span class="glive">LIVE</span>':'')
       +'<span class="teamchips">'+chips+'</span>'
       +'<span class="phase">'+step+'<span>'+hint+'</span></span>'
       +'</div>'+body+'</div>');
