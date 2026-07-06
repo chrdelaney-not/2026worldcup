@@ -923,7 +923,10 @@ function renderCalPop(){
     +'<div class="calgrid">'+WD.map(w=>'<div class="cawd">'+w+'</div>').join("")+cells+'</div>'
     +'<div class="calfoot"><button class="calclear" onclick="clearDate()">Show all</button><button class="calclear" onclick="showToday()">Show today\'s matches</button></div>';
 }
-function toggleCal(e){ if(e) e.stopPropagation(); const p=document.getElementById('calPop'); const showing=p.classList.contains('show'); if(showing){ p.classList.remove('show'); return; } if(selDate){ const k=selDate.split("-"); calMonthIdx=(+k[1]===7)?1:0; } renderCalPop(); p.classList.add('show'); }
+function toggleCal(e){ if(e) e.stopPropagation(); const p=document.getElementById('calPop'); const showing=p.classList.contains('show'); if(showing){ p.classList.remove('show'); return; }
+  if(selDate){ calMonthIdx=(+selDate.split("-")[1]===7)?1:0; }
+  else { const n=new Date(); calMonthIdx=(n.getFullYear()===2026 && n.getMonth()===6)?1:0; }   // default to the current month (July if we're in July 2026, otherwise June)
+  renderCalPop(); p.classList.add('show'); }
 function calNav(e,dir){ if(e) e.stopPropagation(); calMonthIdx=Math.max(0,Math.min(MONTHS.length-1,calMonthIdx+dir)); renderCalPop(); }
 function showToday(){ const d=new Date(), k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); calMonthIdx=(+k.split("-")[1]===7)?1:0; pickDate(k); }
 function pickDate(key){ selDate=key; document.getElementById('dateLabel').textContent=prettyDate(key); document.getElementById('dateBtn').classList.add('set'); document.getElementById('calPop').classList.remove('show'); render(); }
